@@ -105,11 +105,13 @@ namespace NodeSimulator
     {
         private Node A;
         private Node B;
+        double length;
 
-        public Connection(Node a, Node b)
+        public Connection(Node a, Node b, double dist = 1.0)
         {
             A = a;
             B = b;
+            length = dist;
         }
 
         public Node getSource => A;
