@@ -22,6 +22,7 @@ namespace NodeSimulator
         {
             nodes = new Dictionary<Tuple<int, int>, Node>();
             idLookup = new Dictionary<int, Node>();
+            idCounter = 0;
         }
 
         public static int nextIdentifier()
