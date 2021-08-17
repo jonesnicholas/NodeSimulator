@@ -8,10 +8,10 @@ namespace NodeSimulator
 {
     class Pathfinder
     {
-        public List<Tuple<Node, double>> DijkstraPath(NodeLayout layout, Node start, Node end)
+        /*public List<Tuple<Node, double>> DijkstraPath(NodeLayout layout, Node start, Node end)
         {
 
-        }
+        }*/
     }
 
 }

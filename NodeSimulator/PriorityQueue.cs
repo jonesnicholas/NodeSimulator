@@ -12,6 +12,8 @@ namespace NodeSimulator
         int count;
         int countLimit;
 
+        public int Count => count;
+
         public PriorityQueue()
         {
             countLimit = 16;
@@ -19,7 +21,7 @@ namespace NodeSimulator
             count = 0;
         }
 
-        public void Queue(TElement element, float priority)
+        public void Enqueue(TElement element, double priority)
         {
             if (count + 1 >= countLimit)
                 ScaleUpArray();
@@ -36,9 +38,10 @@ namespace NodeSimulator
                 throw new InvalidOperationException("Priority Queue contains no elements");
             }
             TElement output = heap[0].Element;
-            heap[0].Priority = float.MaxValue;
-            fixHeapDown(0);
+            swapIndex(0, Count - 1);
+            heap[Count - 1] = null;
             count--;
+            fixHeapDown(0);
             if (count <= countLimit / 4)
             {
                 ScaleDownArray();
@@ -64,12 +67,12 @@ namespace NodeSimulator
                 return;
             int lchild = 2 * index + 1;
             int rchild = 2 * index + 2;
-            if (heap[lchild] < heap[index])
+            if (lchild < count && heap[lchild] < heap[index])
             {
                 swapIndex(lchild, index);
                 fixHeapDown(lchild);
             }
-            if (heap[rchild] < heap[index])
+            if (rchild < count && heap[rchild] < heap[index])
             {
                 swapIndex(rchild, index);
                 fixHeapDown(rchild);
@@ -106,8 +109,8 @@ namespace NodeSimulator
         private class QueueNode<TE>
         {
             public TE Element;
-            public float Priority;
-            public QueueNode(TE element, float priority)
+            public double Priority;
+            public QueueNode(TE element, double priority)
             {
                 Element = element;
                 Priority = priority;
