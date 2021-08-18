@@ -44,7 +44,14 @@ namespace NodeSimulator
             return output;
         }
 
-        public void AddNeighbor(Node other, bool mutual = false)
+        public List<Connection> getOutgoingConnections()
+        {
+            List<Connection> output = new List<Connection>();
+            output.AddRange(neighbors.Values);
+            return output;
+        }
+
+        public void AddNeighbor(Node other, bool mutual = false, double dist = 1.0)
         {
             if (this == other)
                 throw new Exception("Attempted to add node as neighbor to itself, not currently supported");
@@ -52,14 +59,14 @@ namespace NodeSimulator
             if (neighbors.ContainsKey(other))
                 return;
 
-            Connection con = new Connection(this, other);
+            Connection con = new Connection(this, other, dist);
             neighbors[other] = con;
 
             if (mutual)
             {
                 if (other.neighbors.ContainsKey(this))
                     return;
-                Connection mutCon = new Connection(other, this);
+                Connection mutCon = new Connection(other, this, dist);
                 other.neighbors[this] = mutCon;
             }
         }
@@ -105,14 +112,17 @@ namespace NodeSimulator
     {
         private Node A;
         private Node B;
+        double length;
 
-        public Connection(Node a, Node b)
+        public Connection(Node a, Node b, double dist = 1.0)
         {
             A = a;
             B = b;
+            length = dist;
         }
 
         public Node getSource => A;
         public Node getDestination => B;
+        public double getLength => length;
     }
 }
