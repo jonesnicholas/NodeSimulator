@@ -31,13 +31,14 @@ namespace NodeSimulator
             count++;
         }
 
-        public TElement Dequeue()
+        public (TElement, double) Dequeue()
         {
             if (count == 0)
             {
                 throw new InvalidOperationException("Priority Queue contains no elements");
             }
-            TElement output = heap[0].Element;
+            TElement outElement = heap[0].Element;
+            double outPri = heap[0].Priority;
             swapIndex(0, Count - 1);
             heap[Count - 1] = null;
             count--;
@@ -46,7 +47,7 @@ namespace NodeSimulator
             {
                 ScaleDownArray();
             }
-            return output;
+            return (outElement, outPri);
         }
 
         public void fixHeapUp(int index)

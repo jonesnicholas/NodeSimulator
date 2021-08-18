@@ -22,11 +22,13 @@ namespace NodeSimulatorTests
         {
             PriorityQueue<int> queue = new PriorityQueue<int>();
             int num = random.Next();
-            queue.Enqueue(num, 0.5);
+            double pri = random.NextDouble();
+            queue.Enqueue(num, pri);
             Assert.AreEqual(1, queue.Count);
-            int output = queue.Dequeue();
+            (int outEl, double outPri) = queue.Dequeue();
             Assert.AreEqual(0, queue.Count);
-            Assert.AreEqual(num, output);
+            Assert.AreEqual(num, outEl);
+            Assert.AreEqual(pri, outPri);
         }
 
         [TestMethod]
@@ -47,8 +49,10 @@ namespace NodeSimulatorTests
             List<int> orderOut = new List<int>();
             for (int i = 0; i < num; i ++)
             {
-                orderOut.Add(queue.Dequeue());
-                Assert.AreEqual(sortedPriorities[i], priorities[orderOut[i]],$"Failed on {i}");
+                (int el, double pri) = queue.Dequeue();
+                orderOut.Add(el);
+                Assert.AreEqual(sortedPriorities[i], priorities[el]);
+                Assert.AreEqual(priorities[el], pri);
             }
             Assert.AreEqual(0, queue.Count);
         }
