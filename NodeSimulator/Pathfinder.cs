@@ -18,8 +18,6 @@ namespace NodeSimulator
         /// distances remaining from each step in the path until the end</returns>
         public static List<(Node, double)> DijkstraPath(NodeLayout layout, Node start, Node end)
         {
-            List<(Node, double)> path = new List<(Node, double)>();
-
             PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
             Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
 
@@ -52,6 +50,8 @@ namespace NodeSimulator
             {
                 throw new Exception($"Can't find any path between nodes {start} and {end}");
             }
+
+            List<(Node, double)> path = new List<(Node, double)>();
             Node pathTracer = end;
             while (pathTracer != start)
             {
@@ -103,6 +103,61 @@ namespace NodeSimulator
                 }
             }
             return shortPath;
+        }
+
+        public static List<(Node, double)> AStar(NodeLayout layout, Node start, Node end, Dictionary<Node, double> heuristic)
+        {
+            Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
+            PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
+            frontier.Enqueue(new PathNode(start, null, 0.0), 0.0);
+
+            // reminder, for an admissible output, H(n) must never overestimage the actual distance from n to end
+            // for an optimal output, for every edge (x,y), h(x) <= d(x,y) + h(y)
+            foreach(Node node in layout.nodes.Values)
+            {
+                if (!heuristic.ContainsKey(node))
+                {
+                    throw new Exception($"A* requires all nodes have heuristic value. node {node} is lacking one");
+                }
+            }
+
+            bool foundEnd = false;
+            while (frontier.Count > 0)
+            {
+                (PathNode NextNode, double dist) = frontier.Dequeue();
+                if (!explored.ContainsKey(NextNode.node))
+                {
+                    explored.Add(NextNode.node, NextNode);
+                }
+                if (NextNode.node == end)
+                {
+                    foundEnd = true;
+                    break;
+                }
+                foreach (Connection connection in NextNode.node.getOutgoingConnections())
+                {
+                    double totalDist = connection.getLength + dist;
+                    double pri = totalDist + heuristic[connection.getDestination];
+                    PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
+                    frontier.Enqueue(newFrontier, pri);
+                }
+            }
+
+            if (!foundEnd)
+            {
+                throw new Exception($"Can't find any path between nodes {start} and {end}");
+            }
+
+            List<(Node, double)> path = new List<(Node, double)>();
+            Node pathTracer = end;
+            while (pathTracer != start)
+            {
+                PathNode pathNode = explored[pathTracer];
+                path.Add((pathTracer, pathNode.totalDist));
+                pathTracer = pathNode.from;
+            }
+            path.Add((start, 0.0));
+            return path;
         }
 
         private class PathNode
