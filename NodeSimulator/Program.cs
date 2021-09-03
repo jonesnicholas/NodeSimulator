@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -24,14 +25,82 @@ namespace NodeSimulator
 
             NodeLayout readLayout = new NodeLayout();
             readLayout.inputFromFile("RecursiveOctagon");*/
-            List<double> longestDist = new List<double>();
+            /*List<double> longestDist = new List<double>();
             List<int> longestPath = new List<int>();
             List<double> ratio = new List<double>();
             for (int i = 0; i < 10; i++)
             {
                 GetNums(i, longestDist, longestPath, ratio);
+            }*/
+
+            // CompareMethods();
+
+            NodeLayout layout = new NodeLayout();
+            layout.inputFromFile("SimpleComparison");
+            CompareMethods();
+
+            //Application.Run(new PrimaryForm());
+        }
+
+        static void CompareMethods(int its = 1, NodeLayout layout = null)
+        {
+            int D = 2000;
+            if (layout == null)
+            {
+                layout = new NodeLayout();
+                layout.createSimpleNodeGrid(D, 3.0);
             }
-            Application.Run(new PrimaryForm());
+
+            Node start = layout.nodes[(D * 2 / 10, D * 2 / 10)];
+            Node end = layout.nodes[(D * 8 / 10, D * 8 / 10)];
+
+            Dictionary<Node, double> heuristic = new Dictionary<Node, double>();
+            Dictionary<Node, double> heuristicZero = new Dictionary<Node, double>();
+            foreach (Node node in layout.nodes.Values)
+            {
+                double hdist = Math.Abs(node.getX - end.getX) + Math.Abs(node.getY - end.getY);
+                heuristic[node] = hdist;
+                heuristicZero[node] = 0;
+            }
+
+            DateTime sTime;
+            DateTime eTime;
+
+            /*sTime = DateTime.Now;
+            for (int i = 0; i < its; i++)
+            {
+                Pathfinder.ExhaustivePath(layout, start, end);
+            }
+            eTime = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine($"Exhaustive: {(eTime - sTime).TotalMilliseconds}");
+            */
+
+            sTime = DateTime.Now;
+            for (int i = 0; i < its; i++)
+            {
+                Debug.WriteLine(i);
+                Pathfinder.DijkstraPath(layout, start, end);
+            }
+            eTime = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine($"Dijkstras: {(eTime - sTime).TotalMilliseconds}");
+
+            sTime = DateTime.Now;
+            for (int i = 0; i < its; i++)
+            {
+                Debug.WriteLine(i);
+                Pathfinder.AStar(layout, start, end, heuristic);
+            }
+            eTime = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalMilliseconds}");
+
+            sTime = DateTime.Now;
+            for (int i = 0; i < its; i++)
+            {
+                Debug.WriteLine(i);
+                Pathfinder.AStar(layout, start, end, heuristicZero);
+            }
+            eTime = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalMilliseconds}");
         }
 
         static void GetNums(int i, List<double> longestDist, List<int> longestPath, List<double> ratio)

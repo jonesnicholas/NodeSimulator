@@ -9,9 +9,10 @@ namespace NodeSimulator
 {
     public class NodeLayout
     {
-        public Dictionary<Tuple<int, int>, Node> nodes;
+        public Dictionary<(int, int), Node> nodes;
         public Dictionary<int, Node> idLookup;
         static int idCounter = 0;
+        static Random random = new Random(0);
 
         public NodeLayout()
         {
@@ -20,7 +21,7 @@ namespace NodeSimulator
 
         public void init()
         {
-            nodes = new Dictionary<Tuple<int, int>, Node>();
+            nodes = new Dictionary<(int, int), Node>();
             idLookup = new Dictionary<int, Node>();
             idCounter = 0;
         }
@@ -33,27 +34,27 @@ namespace NodeSimulator
 
         public void addNode(Node node)
         {
-            nodes[new Tuple<int, int>(node.getX, node.getY)] = node;
+            nodes[(node.getX, node.getY)] = node;
             idLookup[node.getId] = node;
         }
 
-        public void addConnection(Node node, Node other, bool mutual = false)
+        public void addConnection(Node node, Node other, bool mutual = false, double dist = 1.0)
         {
-            node.AddNeighbor(other, mutual);
+            node.AddNeighbor(other, mutual, dist);
         }
 
-        public void addConnection(Node node, int xOther, int yOther, bool mutual = false)
+        public void addConnection(Node node, int xOther, int yOther, bool mutual = false, double dist = 1.0)
         {
-            addConnection(node, nodes[new Tuple<int, int>(xOther, yOther)], mutual);
+            addConnection(node, nodes[(xOther, yOther)], mutual, dist);
         }
 
-        public void addConnection(int id1, int id2, bool mutual = false)
+        public void addConnection(int id1, int id2, bool mutual = false, double dist = 1.0)
         {
-            addConnection(idLookup[id1], idLookup[id2], mutual);
+            addConnection(idLookup[id1], idLookup[id2], mutual, dist);
         }
 
         #region Create Sample Layouts
-        public void createSimpleNodeGrid(int D = 5)
+        public void createSimpleNodeGrid(int D = 5, double maxEdge = 1.0)
         {
             for (int x = 0; x < D; x++)
             {
@@ -63,11 +64,11 @@ namespace NodeSimulator
                     addNode(node);
                     if (x > 0)
                     {
-                        addConnection(node, x - 1, y, mutual: true);
+                        addConnection(node, x - 1, y, mutual: true, randDist(1.0, maxEdge));
                     }
                     if (y > 0)
                     {
-                        addConnection(node, x, y - 1, mutual: true);
+                        addConnection(node, x, y - 1, mutual: true, randDist(1.0, maxEdge));
                     }
                 }
             }
@@ -107,11 +108,11 @@ namespace NodeSimulator
                 }
                 else
                 {
-                    if (!nodes.ContainsKey(new Tuple<int, int>(xPos, yPos)))
+                    if (!nodes.ContainsKey((xPos, yPos)))
                     {
                         addNode(new Node(xPos, yPos));
                     }
-                    Node node = nodes[new Tuple<int, int>(xPos, yPos)];
+                    Node node = nodes[(xPos, yPos)];
                     if (prevNode != null)
                     {
                         addConnection(node, prevNode, mutual: true);
@@ -158,7 +159,7 @@ namespace NodeSimulator
             writer.WriteLine(connections.Count);
             foreach (Connection con in connections)
             {
-                writer.WriteLine($"{con.getSource.getId} {con.getDestination.getId}");
+                writer.WriteLine($"{con.getSource.getId} {con.getDestination.getId} {con.getLength}");
             }
             writer.Close();
         }
@@ -182,7 +183,7 @@ namespace NodeSimulator
                 int y = int.Parse(pars[2]);
                 Node node = new Node(x, y, nodeName, id);
 
-                if (nodes.ContainsKey(new Tuple<int, int>(x, y)))
+                if (nodes.ContainsKey((x, y)))
                     throw new Exception("Current implementation does not allow multiple nodes at same coordinates");
 
                 addNode(node);
@@ -194,9 +195,16 @@ namespace NodeSimulator
                 string[] pars = parameterLine.Split(' ');
                 int sourceId = int.Parse(pars[0]);
                 int destId = int.Parse(pars[1]);
-                addConnection(sourceId, destId);
+                double dist = double.Parse(pars[2]);
+                addConnection(sourceId, destId, dist:dist);
             }
         }
         #endregion
+
+        private double randDist(double min = 1.0, double max = 2.0)
+        {
+            double rand = random.NextDouble();
+            return min + rand * (max - min);
+        }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NodeSimulator;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace NodeSimulatorTests
 {
@@ -29,6 +31,41 @@ namespace NodeSimulatorTests
             Assert.AreEqual(28, path[0].Item2);
         }
 
+        [TestMethod]
+        public void Pathfinder_AStar_SimplePremade()
+        {
+            NodeLayout layout = SimplePremadeLayout();
+            Node start = layout.idLookup[1];
+            Node end = layout.idLookup[2];
+            Dictionary<Node, double> heuristic = new Dictionary<Node, double>();
+            foreach (Node node in layout.nodes.Values)
+            {
+                heuristic[node] = System.Math.Abs(node.getX - end.getX) + System.Math.Abs(node.getY - end.getY);
+            }
+            List<(Node, double)> path = Pathfinder.AStar(layout, start, end, heuristic);
+            Assert.AreEqual(8, path.Count);
+            Assert.AreEqual(28, path[0].Item2);
+        }
+
+        [TestMethod]
+        public void Pathfinder_Comparison_SimplePremade()
+        {
+            NodeLayout layout = SimplePremadeLayout();
+            Node start = layout.idLookup[1];
+            Node end = layout.idLookup[2];
+            Dictionary<Node, double> heuristic = new Dictionary<Node, double>();
+            foreach (Node node in layout.nodes.Values)
+            {
+                heuristic[node] = System.Math.Abs(node.getX - end.getX) + System.Math.Abs(node.getY - end.getY);
+            }
+            List<(Node, double)> dijkstrasPath = Pathfinder.ExhaustivePath(layout, start, end);
+            List<(Node, double)> exhaustivePath = Pathfinder.DijkstraPath(layout, start, end);
+            List<(Node, double)> astarPath = Pathfinder.AStar(layout, start, end, heuristic);
+            AssertAreSamePath(exhaustivePath, dijkstrasPath);
+            AssertAreSamePath(exhaustivePath, astarPath);
+            AssertAreSamePath(dijkstrasPath, astarPath);
+        }
+
         private NodeLayout SimplePremadeLayout()
         {
             NodeLayout layout = new NodeLayout();
@@ -42,6 +79,25 @@ namespace NodeSimulatorTests
             Node n21 = new Node(2, 1); n21.AddNeighbor(n20, mutual: true, 7); n21.AddNeighbor(n11, mutual: true, 2); layout.addNode(n21);
             Node n22 = new Node(2, 2); n22.AddNeighbor(n21, mutual: true, 3); n22.AddNeighbor(n12, mutual: true, 1); layout.addNode(n22);
             return layout;
+        }
+
+        private static void AssertAreSamePath(List<(Node, double)> a, List<(Node, double)> b)
+        {
+            for (int i = 0; i < a.Count; i ++)
+            {
+                if (b.Count <= i)
+                {
+                    Assert.Fail($"Path mismatch at index [{i}]: [{a[i].Item1} : {a[i].Item2}] :: [<null>]");
+                }
+                if (a[i].Item1 != b[i].Item1 || a[i].Item2 != b[i].Item2)
+                {
+                    Assert.Fail($"Path mismatch at index [{i}]: [{a[i].Item1} : {a[i].Item2}] :: [{b[i].Item1} : {b[i].Item2}]");
+                }
+            }
+            if (b.Count > a.Count)
+            {
+                Assert.Fail($"Path mismatch at index [{a.Count}]: [<null>] :: [{b[a.Count].Item1} : {b[a.Count].Item2}]");
+            }
         }
     }
 }

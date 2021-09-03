@@ -95,6 +95,7 @@ namespace NodeSimulator
                 newHeap[i] = heap[i];
             }
             heap = newHeap;
+            countLimit *= 2;
         }
 
         private void ScaleDownArray()
@@ -105,6 +106,7 @@ namespace NodeSimulator
                 newHeap[i] = heap[i];
             }
             heap = newHeap;
+            countLimit /= 2;
         }
 
         private class QueueNode<TE>

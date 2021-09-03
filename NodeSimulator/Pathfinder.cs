@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,30 +21,36 @@ namespace NodeSimulator
         {
             PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
             Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
+            frontier.Enqueue(new PathNode(start, null, 0.0), 0.0);
 
-            PathNode startPathNode = new PathNode(start, null, 0.0);
-
-            frontier.Enqueue(startPathNode, 0.0);
             bool foundEnd = false;
-            while (!foundEnd && frontier.Count > 0)
+            int ops = 0;
+            int deqs = 0;
+            int queues = 0;
+            while (frontier.Count > 0)
             {
                 (PathNode NextNode, double dist) = frontier.Dequeue();
-                if (explored.ContainsKey(NextNode.node))
+                deqs++;
+                if (!explored.ContainsKey(NextNode.node))
                 {
-                    continue;
-                }
-                explored.Add(NextNode.node, NextNode);
-                if (NextNode.node == end)
-                {
-                    foundEnd = true;
-                    break;
-                }
-                foreach (Connection connection in NextNode.node.getOutgoingConnections().Where(con => !explored.ContainsKey(con.getDestination)))
-                {
-                    double totalDist = connection.getLength + dist;
-                    double pri = totalDist;
-                    PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
-                    frontier.Enqueue(newFrontier, pri);
+                    explored.Add(NextNode.node, NextNode);
+                    if (NextNode.node == end)
+                    {
+                        foundEnd = true;
+                        break;
+                    }
+                    ops++;
+                    foreach (Connection connection in NextNode.node.getOutgoingConnections())
+                    {
+                        if (!explored.ContainsKey(connection.getDestination))
+                        {
+                            double totalDist = connection.getLength + dist;
+                            double pri = totalDist;
+                            PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
+                            frontier.Enqueue(newFrontier, pri);
+                            queues++;
+                        }
+                    }
                 }
             }
             if (!foundEnd)
@@ -60,7 +67,8 @@ namespace NodeSimulator
                 pathTracer = pathNode.from;
             }
             path.Add((start, 0.0));
-            return path;
+            Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
+            return ReversePath(path);
         }
 
         /// <summary>
@@ -107,39 +115,49 @@ namespace NodeSimulator
 
         public static List<(Node, double)> AStar(NodeLayout layout, Node start, Node end, Dictionary<Node, double> heuristic)
         {
-            Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
             PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
+            Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
             frontier.Enqueue(new PathNode(start, null, 0.0), 0.0);
 
-            // reminder, for an admissible output, H(n) must never overestimage the actual distance from n to end
+            // reminder, for an admissible output, H(n) must never overestimate the actual distance from n to end
             // for an optimal output, for every edge (x,y), h(x) <= d(x,y) + h(y)
-            foreach(Node node in layout.nodes.Values)
+            /*foreach(Node node in layout.nodes.Values)
             {
                 if (!heuristic.ContainsKey(node))
                 {
                     throw new Exception($"A* requires all nodes have heuristic value. node {node} is lacking one");
                 }
-            }
+            }*/
 
             bool foundEnd = false;
+            int ops = 0;
+            int deqs = 0;
+            int queues = 0;
             while (frontier.Count > 0)
             {
-                (PathNode NextNode, double dist) = frontier.Dequeue();
-                if (!explored.ContainsKey(NextNode.node))
+                (PathNode NextNode, double priority) = frontier.Dequeue();
+                deqs++;
+                if (!explored.ContainsKey(NextNode.node) || NextNode.totalDist < explored[NextNode.node].totalDist)
                 {
-                    explored.Add(NextNode.node, NextNode);
-                }
-                if (NextNode.node == end)
-                {
-                    foundEnd = true;
-                    break;
-                }
-                foreach (Connection connection in NextNode.node.getOutgoingConnections())
-                {
-                    double totalDist = connection.getLength + dist;
-                    double pri = totalDist + heuristic[connection.getDestination];
-                    PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
-                    frontier.Enqueue(newFrontier, pri);
+                    explored[NextNode.node] = NextNode;
+                    if (NextNode.node == end)
+                    {
+                        foundEnd = true;
+                        break;
+                    }
+                    ops++;
+                    
+                    foreach (Connection connection in NextNode.node.getOutgoingConnections())
+                    {
+                        if (!explored.ContainsKey(connection.getDestination) || explored[connection.getDestination].totalDist >= connection.getLength + NextNode.totalDist)
+                        {
+                            double totalDist = connection.getLength + NextNode.totalDist;
+                            double pri = totalDist + heuristic[connection.getDestination];
+                            PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
+                            frontier.Enqueue(newFrontier, pri);
+                            queues++;
+                        }
+                    }
                 }
             }
 
@@ -157,7 +175,8 @@ namespace NodeSimulator
                 pathTracer = pathNode.from;
             }
             path.Add((start, 0.0));
-            return path;
+            Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
+            return ReversePath(path);
         }
 
         private class PathNode
@@ -170,6 +189,27 @@ namespace NodeSimulator
             {
                 node = toNode; from = fromNode; totalDist = dist;
             }
+
+            public override string ToString()
+            {
+                return $"{(from == null ? "[null]" : from)} :: {totalDist}";
+            }
+        }
+
+        public static List<(Node, double)> ReversePath(List<(Node, double)> path)
+        {
+            List<(Node, double)> revPath = new List<(Node, double)>();
+            double dist = path[0].Item2;
+            revPath.Add((path.Last().Item1, dist));
+            for (int i = path.Count - 2; i >= 0; i --)
+            {
+                double change = path[i].Item2 - path[i + 1].Item2;
+                dist -= change;
+                revPath.Add((path[i].Item1, dist));
+            }
+            return revPath;
+
+            // return revPath;
         }
     }
 

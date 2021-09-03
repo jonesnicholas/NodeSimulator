@@ -21,26 +21,26 @@ namespace NodeSimulatorTests
             {
                 for (int j = 0; j < size; j++)
                 {
-                    Node testNode = layout.nodes[new Tuple<int, int>(i, j)];
+                    Node testNode = layout.nodes[(i, j)];
                     Node otherNode;
                     if (i != 0)
                     {
-                        otherNode = layout.nodes[new Tuple<int, int>(i - 1, j)];
+                        otherNode = layout.nodes[(i - 1, j)];
                         Assert.IsTrue(testNode.hasNeighbor(otherNode));
                     }
                     if (i != size - 1)
                     {
-                        otherNode = layout.nodes[new Tuple<int, int>(i + 1, j)];
+                        otherNode = layout.nodes[(i + 1, j)];
                         Assert.IsTrue(testNode.hasNeighbor(otherNode));
                     }
                     if (j != 0)
                     {
-                        otherNode = layout.nodes[new Tuple<int, int>(i, j - 1)];
+                        otherNode = layout.nodes[(i, j - 1)];
                         Assert.IsTrue(testNode.hasNeighbor(otherNode));
                     }
                     if (j != size - 1)
                     {
-                        otherNode = layout.nodes[new Tuple<int, int>(i, j + 1)];
+                        otherNode = layout.nodes[(i, j + 1)];
                         Assert.IsTrue(testNode.hasNeighbor(otherNode));
                     }
                 }
