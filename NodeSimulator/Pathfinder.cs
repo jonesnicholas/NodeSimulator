@@ -19,7 +19,7 @@ namespace NodeSimulator
         /// distances remaining from each step in the path until the end</returns>
         public static List<(Node, double)> DijkstraPath(NodeLayout layout, Node start, Node end)
         {
-            PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
+            PriorityQueue<PathNode, double> frontier = new PriorityQueue<PathNode, double>();
             Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
             frontier.Enqueue(new PathNode(start, null, 0.0), 0.0);
 
@@ -29,7 +29,7 @@ namespace NodeSimulator
             int queues = 0;
             while (frontier.Count > 0)
             {
-                (PathNode NextNode, double dist) = frontier.Dequeue();
+                PathNode NextNode = frontier.Dequeue();
                 deqs++;
                 if (!explored.ContainsKey(NextNode.node))
                 {
@@ -44,7 +44,7 @@ namespace NodeSimulator
                     {
                         if (!explored.ContainsKey(connection.getDestination))
                         {
-                            double totalDist = connection.getLength + dist;
+                            double totalDist = connection.getLength + NextNode.totalDist;
                             double pri = totalDist;
                             PathNode newFrontier = new PathNode(connection.getDestination, connection.getSource, totalDist);
                             frontier.Enqueue(newFrontier, pri);
@@ -67,7 +67,7 @@ namespace NodeSimulator
                 pathTracer = pathNode.from;
             }
             path.Add((start, 0.0));
-            Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
+            //Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
             return ReversePath(path);
         }
 
@@ -115,7 +115,7 @@ namespace NodeSimulator
 
         public static List<(Node, double)> AStar(NodeLayout layout, Node start, Node end, Dictionary<Node, double> heuristic)
         {
-            PriorityQueue<PathNode> frontier = new PriorityQueue<PathNode>();
+            PriorityQueue<PathNode, double> frontier = new PriorityQueue<PathNode, double>();
             Dictionary<Node, PathNode> explored = new Dictionary<Node, PathNode>();
             frontier.Enqueue(new PathNode(start, null, 0.0), 0.0);
 
@@ -135,7 +135,7 @@ namespace NodeSimulator
             int queues = 0;
             while (frontier.Count > 0)
             {
-                (PathNode NextNode, double priority) = frontier.Dequeue();
+                PathNode NextNode = frontier.Dequeue();
                 deqs++;
                 if (!explored.ContainsKey(NextNode.node) || NextNode.totalDist < explored[NextNode.node].totalDist)
                 {
@@ -175,7 +175,7 @@ namespace NodeSimulator
                 pathTracer = pathNode.from;
             }
             path.Add((start, 0.0));
-            Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
+            //Debug.WriteLine($"Ops: {ops} Deqs: {deqs} Queues: {queues}");
             return ReversePath(path);
         }
 

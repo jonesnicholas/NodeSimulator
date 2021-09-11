@@ -42,9 +42,10 @@ namespace NodeSimulator
             //Application.Run(new PrimaryForm());
         }
 
-        static void CompareMethods(int its = 1, NodeLayout layout = null)
+        static void CompareMethods(int its = 100, NodeLayout layout = null)
         {
-            int D = 2000;
+            Debug.WriteLine("Making Layout");
+            int D = 4000;
             if (layout == null)
             {
                 layout = new NodeLayout();
@@ -54,6 +55,7 @@ namespace NodeSimulator
             Node start = layout.nodes[(D * 2 / 10, D * 2 / 10)];
             Node end = layout.nodes[(D * 8 / 10, D * 8 / 10)];
 
+            Debug.WriteLine("Filling Heuristic");
             Dictionary<Node, double> heuristic = new Dictionary<Node, double>();
             Dictionary<Node, double> heuristicZero = new Dictionary<Node, double>();
             foreach (Node node in layout.nodes.Values)
@@ -82,7 +84,7 @@ namespace NodeSimulator
                 Pathfinder.DijkstraPath(layout, start, end);
             }
             eTime = DateTime.Now;
-            System.Diagnostics.Debug.WriteLine($"Dijkstras: {(eTime - sTime).TotalMilliseconds}");
+            System.Diagnostics.Debug.WriteLine($"Dijkstras: {(eTime - sTime).TotalSeconds}");
 
             sTime = DateTime.Now;
             for (int i = 0; i < its; i++)
@@ -91,7 +93,7 @@ namespace NodeSimulator
                 Pathfinder.AStar(layout, start, end, heuristic);
             }
             eTime = DateTime.Now;
-            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalMilliseconds}");
+            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalSeconds}");
 
             sTime = DateTime.Now;
             for (int i = 0; i < its; i++)
@@ -100,7 +102,7 @@ namespace NodeSimulator
                 Pathfinder.AStar(layout, start, end, heuristicZero);
             }
             eTime = DateTime.Now;
-            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalMilliseconds}");
+            System.Diagnostics.Debug.WriteLine($"AStar: {(eTime - sTime).TotalSeconds}");
         }
 
         static void GetNums(int i, List<double> longestDist, List<int> longestPath, List<double> ratio)
